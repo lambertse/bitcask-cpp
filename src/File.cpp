@@ -1,14 +1,15 @@
 #include "File.hpp"
+#include "bitcask/Type.hpp"
 
 namespace bitcask::file {
 
-static bool OpenFile(FileHandler file, const std::string &filename,
-                     std::ios::openmode mode) {
+bool OpenFile(FileHandler file, const std::string &filename,
+              std::ios::openmode mode) {
   file->open(filename, mode);
   return file->is_open();
 }
 
-static bool ReadFile(FileHandler file, void *buf, size_t size) {
+bool ReadFile(FileHandler file, void *buf, size_t size) {
   if (!file->read(static_cast<char *>(buf), size)) {
     return false;
   }
@@ -21,7 +22,7 @@ static std::string ReadFile(FileHandler file, size_t size) {
   return buffer;
 }
 
-static std::string ReadFile(FileHandler file, uint32_t offset, size_t size) {
+static std::string ReadFile(FileHandler file, Offset offset, size_t size) {
   file->seekg(offset, std::ios::beg);
   return ReadFile(file, size);
 }
