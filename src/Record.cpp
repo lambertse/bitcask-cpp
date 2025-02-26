@@ -1,5 +1,5 @@
 #include "Record.hpp"
-
+#include "log/Logger.hpp"
 #include <crc32c/crc32c.h>
 namespace bitcask {
 
@@ -11,7 +11,7 @@ struct RecordHeader {
 
 bool WriteRecordToFile(file::FileHandler file, const Key &key,
                        const Value &value) {
-  // TDB
+
   return true;
 }
 
