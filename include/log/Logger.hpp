@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 
+#include "LibExport.hpp"
+
 namespace bitcask::logger {
 
 using LogLevels = uint8_t;
@@ -26,16 +28,17 @@ inline constexpr LogLevel LOG_LEVEL_FROM_INFO =
 
 using LoggingFunctionType = std::function<void(const std::string &msg)>;
 
-void init(LogLevels allowedLevels = LOG_LEVEL_SILENCE,
-          LoggingFunctionType outLogFunc = {},
-          LoggingFunctionType errLogFunc = {});
+BITCASK_EXPORT void init(LogLevels allowedLevels = LOG_LEVEL_SILENCE,
+                         LoggingFunctionType outLogFunc = {},
+                         LoggingFunctionType errLogFunc = {});
 
-void stopLogging();
-void changeLogLevels(LogLevels allowedLevels = LOG_LEVEL_SILENCE);
-bool allowed(LogLevel level);
-void enable(LogLevel level);
-void disable(LogLevel level);
-void logImpl(LogLevel filteredLevel, const std::string &msg);
+BITCASK_EXPORT void stopLogging();
+BITCASK_EXPORT void
+changeLogLevels(LogLevels allowedLevels = LOG_LEVEL_SILENCE);
+BITCASK_EXPORT bool allowed(LogLevel level);
+BITCASK_EXPORT void enable(LogLevel level);
+BITCASK_EXPORT void disable(LogLevel level);
+BITCASK_EXPORT void logImpl(LogLevel filteredLevel, const std::string &msg);
 
 template <typename... Msg> void debug(Msg &&...msg);
 template <typename... Msg> void info(Msg &&...msg);

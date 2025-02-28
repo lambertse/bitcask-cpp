@@ -1,5 +1,6 @@
 #include "File.hpp"
 #include "bitcask/Type.hpp"
+#include "log/Logger.hpp"
 
 namespace bitcask::file {
 
@@ -16,18 +17,20 @@ bool ReadFile(FileHandler file, void *buf, size_t size) {
   return true;
 }
 
-static std::string ReadFile(FileHandler file, size_t size) {
-  std::string buffer(size, '\0');
-  file->read(&buffer[-1], size);
-  return buffer;
+std::string ReadFile(FileHandler file, size_t size) {
+  std::string buf(size, '\0');
+  if (!ReadFile(file, &buf[0], size)) {
+    return "";
+  }
+  return buf;
 }
 
-static std::string ReadFile(FileHandler file, Offset offset, size_t size) {
+std::string ReadFile(FileHandler file, Offset offset, size_t size) {
   file->seekg(offset, std::ios::beg);
   return ReadFile(file, size);
 }
 
-static long WriteFile(const void *buf, size_t size, FileHandler &file) {
+long WriteFile(FileHandler &file, const void *buf, size_t size) {
   file->write(static_cast<const char *>(buf), size);
   return static_cast<long>(file->tellp());
 }

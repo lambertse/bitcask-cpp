@@ -20,9 +20,15 @@ FetchContent_Declare(
   )
 FetchContent_MakeAvailable(crc32c)
 #
+FetchContent_Declare(
+  googletest
+    URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+  )
+FetchContent_MakeAvailable(googletest)
+include_directories(${googletest_SOURCE_DIR}/googletest/include/)
 
 # Include all header files in the include directory
-file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.h")
+file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.hpp")
 
 # Include all source files in the src directory
 file(GLOB SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -31,5 +37,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Add all source files to the library
 add_library(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(${PROJECT_NAME} PRIVATE crc32c)
+
+add_subdirectory(test)
 
 
