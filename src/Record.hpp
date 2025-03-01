@@ -9,12 +9,11 @@ namespace bitcask {
 struct RecordInf {
   uint32_t size;
   Offset keyOffset;
-  Key key;
   Offset valueOffset;
-  Value value;
 };
 
-using RecordFoundCallback = std::function<void(RecordInf)>;
+using RecordFoundCallback =
+    std::function<void(const Key &, const Value &, RecordInf)>;
 
 void ReadAllRecordFromFile(file::FileHandler file,
                            const RecordFoundCallback &callback);

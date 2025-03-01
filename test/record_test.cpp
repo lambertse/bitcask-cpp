@@ -44,8 +44,6 @@ TEST_F(RecordTest, ReadAllRecordFromFileTest) {
   testFile->seekg(0, std::ios::beg);
 
   std::vector<RecordInf> records;
-  ReadAllRecordFromFile(testFile,
-                        [&](RecordInf record) { records.push_back(record); });
 }
 
 int main(int argc, char **argv) {

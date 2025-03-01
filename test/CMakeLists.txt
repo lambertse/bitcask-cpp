@@ -6,3 +6,4 @@ macro(add_test_executable name)
 endmacro()
 
 add_test_executable(record)
+add_test_executable(bitcaskimpl)

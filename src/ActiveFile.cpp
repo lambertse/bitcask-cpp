@@ -1,4 +1,5 @@
 #include "ActiveFile.hpp"
+#include "Record.hpp"
 
 namespace bitcask {
 using namespace file;
@@ -6,8 +7,7 @@ ActiveFile::~ActiveFile() {
   // TBD
 }
 
-bool ActiveFile::Write(const Key &key, const Value &value) {
-  // TBD
-  return false;
+RecordInf ActiveFile::Write(const Key &key, const Value &value) {
+  return WriteRecord(_file, key, value);
 }
 } // namespace bitcask

@@ -1,6 +1,8 @@
 #include "BitcaskImpl.hpp"
+#include "log/Logger.hpp"
 #include <filesystem>
 #include <memory>
+#include <system_error>
 
 namespace bitcask {
 using namespace file;
@@ -22,15 +24,28 @@ uint32_t BitcaskImpl::GetActiveFileID(const std::string &dbDir) {
 
 bool BitcaskImpl::RestoreActiveMap(const std::string &activePath) {
   FileHandler file = nullptr;
-  if (std::filesystem::exists(activePath)) {
-    RecordFoundCallback callback = [this](RecordInf record) {
-      _activeMap.Put(record.key, record.value);
+  std::error_code ec;
+  if (std::filesystem::exists(activePath, ec)) {
+    RecordFoundCallback callback = [this](const Key &key, const Value &value,
+                                          RecordInf record) {
+      Hint hint;
+      hint.fd = _activeFileID;
+      hint.offset = record.valueOffset;
+      hint.size = sizeof(key);
+      _recordMap.Put(key, hint);
+      _activeMap.Put(key, value);
     };
     file = ActiveFile::Restore(activePath, callback);
+    BITCASK_LOGGER_INFO("Restore active file: {}", activePath);
   } else {
     file = new std::fstream();
-    OpenFile(file, activePath,
-             std::ios::binary | std::ios::out | std::ios::in | std::ios::trunc);
+    if (!OpenFile(file, activePath,
+                  std::ios::binary | std::ios::out | std::ios::in |
+                      std::ios::trunc)) {
+      BITCASK_LOGGER_ERROR("Cannot create active file: {}", activePath);
+      return false;
+    }
+    BITCASK_LOGGER_INFO("Create new active file: {}", activePath);
   }
   _activeFile = ActiveFile::Create(file);
   return true;
@@ -42,16 +57,16 @@ bool BitcaskImpl::RestoreStableMap(const std::string &dbDir) {
   for (const auto &entry : std::filesystem::directory_iterator(dbDir, ec)) {
     if (entry.is_regular_file()) {
       uint32_t fileID = std::stoul(entry.path().filename().string());
-      RecordFoundCallback callback = [&](RecordInf record) {
+      RecordFoundCallback callback = [&](const Key &key, const Value &value,
+                                         RecordInf record) {
         Hint hint;
         hint.fd = fileID;
         hint.offset = record.valueOffset;
-        hint.size = sizeof(record.value);
-        _recordMap.Put(record.key, hint);
+        hint.size = sizeof(value);
+        _recordMap.Put(key, hint);
       };
       FileHandler file = StableFile::Restore(entry.path().string(), callback);
-      _stableFiles[fileID] =
-          std::dynamic_pointer_cast<StableFile>(StableFile::Create(file));
+      _stableFiles[fileID] = StableFile::Create(file);
     }
   }
   return true;
@@ -59,7 +74,7 @@ bool BitcaskImpl::RestoreStableMap(const std::string &dbDir) {
 
 BitcaskImpl::BitcaskImpl(const std::string &dbDir) {
   _activeFileID = GetActiveFileID(dbDir);
-  RestoreActiveMap(dbDir);
+  RestoreActiveMap(dbDir + std::to_string(_activeFileID) + ".db");
   RestoreStableMap(dbDir);
 }
 
@@ -67,7 +82,14 @@ BitcaskImpl::~BitcaskImpl() {}
 
 bool BitcaskImpl::Put(const Key &key, const Value &value) {
   std::lock_guard lock(_mtx);
-  // TBD
+  _activeMap.Put(key, value);
+  if (!_activeFile) {
+    BITCASK_LOGGER_ERROR("Active file is not initialized");
+    return false;
+  }
+  auto recordInf = _activeFile->Write(key, value);
+  _recordMap.Put(key, {_activeFileID, recordInf.valueOffset, sizeof(value)});
+
   return false;
 }
 

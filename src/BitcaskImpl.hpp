@@ -11,7 +11,7 @@
 namespace bitcask {
 class BitcaskImpl {
 public:
-  BitcaskImpl(const std::string &dbDir);
+  explicit BitcaskImpl(const std::string &dbDir);
   ~BitcaskImpl();
 
   bool Put(const Key &key, const Value &value);
@@ -31,6 +31,6 @@ private:
   RecordMap _recordMap;
 
   std::map<uint32_t, std::shared_ptr<StableFile>> _stableFiles;
-  ActiveFile::Handler _activeFile;
+  std::shared_ptr<ActiveFile> _activeFile;
 };
 } // namespace bitcask

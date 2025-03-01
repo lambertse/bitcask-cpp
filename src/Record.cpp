@@ -1,6 +1,7 @@
 #include "Record.hpp"
 #include "CRC32.hpp"
 #include "File.hpp"
+#include "bitcask/Type.hpp"
 #include "log/Logger.hpp"
 namespace bitcask {
 
@@ -34,27 +35,21 @@ RecordInf WriteRecord(file::FileHandler file, const Key &key,
   recordInf.valueOffset = file->tellp();
   file::WriteFile(file, value.c_str(), value.size());
   recordInf.size = size;
-
-  BITCASK_LOGGER_DEBUG("Write: Header: crc32: {}, keySize: {}, valueSize: {}",
-                       header.crc32, header.keySize, header.valueSize);
-  BITCASK_LOGGER_DEBUG("Write: keyOffset: {}, valueOffset: {}, size: {}",
-                       recordInf.keyOffset, recordInf.valueOffset,
-                       recordInf.size);
-
   return recordInf;
 }
 
-bool ReadRecord(file::FileHandler file, RecordInf &record) {
+bool ReadRecord(file::FileHandler file, Key &key, Value &value,
+                RecordInf &record) {
   RecordHeader header;
   if (!file::ReadFile(file, &header, sizeof(header)))
     return false;
   record.keyOffset = file->tellg();
-  record.key = file::ReadFile(file, record.keyOffset, header.keySize);
+  key = file::ReadFile(file, record.keyOffset, header.keySize);
   record.valueOffset = record.keyOffset + header.keySize;
-  record.value = file::ReadFile(file, record.valueOffset, header.valueSize);
+  value = file::ReadFile(file, record.valueOffset, header.valueSize);
   record.size = sizeof(header) + header.keySize + header.valueSize;
 
-  if (header.crc32 != internal::getCRC32(header, record.key, record.value)) {
+  if (header.crc32 != internal::getCRC32(header, key, value)) {
     BITCASK_LOGGER_ERROR("CRC32 not match");
     return false;
   }
@@ -65,13 +60,13 @@ void ReadAllRecordFromFile(file::FileHandler file,
                            const RecordFoundCallback &callback) {
   RecordInf info;
   uint32_t count = 0;
+  Key key;
+  Value value;
 
   file->seekg(0, std::ios::beg);
-  while (ReadRecord(file, info)) {
-    callback(info);
+  while (ReadRecord(file, key, value, info)) {
+    callback(key, value, info);
     count++;
-    BITCASK_LOGGER_INFO("Read {}, key: {}, value: {}", count, info.key,
-                        info.value);
   }
   if (!file->eof()) {
     BITCASK_LOGGER_ERROR("Read file error");

@@ -1,4 +1,5 @@
 #include "RecordMap.hpp"
+#include "log/Logger.hpp"
 
 namespace bitcask {
 
