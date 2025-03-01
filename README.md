@@ -1,1 +1,6 @@
 # Bitcask
+
+# Dependencies
+
+- [Libcuckoo]
+- [GTest] 

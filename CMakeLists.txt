@@ -25,6 +25,14 @@ FetchContent_Declare(
     URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
   )
 FetchContent_MakeAvailable(googletest)
+#
+FetchContent_Declare(
+  libcuckoo 
+  GIT_REPOSITORY https://github.com/efficient/libcuckoo.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(libcuckoo)
+include_directories(${libcuckoo_SOURCE_DIR})
 include_directories(${googletest_SOURCE_DIR}/googletest/include/)
 
 # Include all header files in the include directory

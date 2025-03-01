@@ -1,8 +1,8 @@
 #include "StableFile.hpp"
+#include <filesystem>
 
 namespace bitcask {
-StableFile::StableFile(file::FileHandler &file) : _file(file) {}
-
+using namespace file;
 StableFile::~StableFile() {}
 
 Value StableFile::Read(const Key &key, Offset offset, size_t size) {

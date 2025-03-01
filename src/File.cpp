@@ -1,6 +1,6 @@
 #include "File.hpp"
 #include "bitcask/Type.hpp"
-#include "log/Logger.hpp"
+#include <filesystem>
 
 namespace bitcask::file {
 
@@ -33,5 +33,9 @@ std::string ReadFile(FileHandler file, Offset offset, size_t size) {
 long WriteFile(FileHandler &file, const void *buf, size_t size) {
   file->write(static_cast<const char *>(buf), size);
   return static_cast<long>(file->tellp());
+}
+bool Exist(const std::string &file) {
+  std::error_code ec;
+  return std::filesystem::exists(file, ec);
 }
 } // namespace bitcask::file

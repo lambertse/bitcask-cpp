@@ -62,7 +62,7 @@ bool ReadRecord(file::FileHandler file, RecordInf &record) {
 }
 
 void ReadAllRecordFromFile(file::FileHandler file,
-                           std::function<void(RecordInf)> callback) {
+                           const RecordFoundCallback &callback) {
   RecordInf info;
   uint32_t count = 0;
 

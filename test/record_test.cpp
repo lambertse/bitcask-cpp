@@ -14,7 +14,6 @@ using namespace file;
 class RecordTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    std::remove("/tmp/testfile.dat");
     testFile = new std::fstream();
     testFile->open("/tmp/testfile.dat", std::ios::binary | std::ios::out |
                                             std::ios::in | std::ios::trunc);
@@ -29,18 +28,6 @@ protected:
 
   FileHandler testFile;
 };
-
-// TEST_F(RecordTest, WriteRecordTest) {
-//   Key key = "testKey";
-//   Value value = "testValue";
-//   RecordInf recordInf = WriteRecord(testFile, key, value);
-//
-//   ASSERT_EQ(recordInf.size,
-//             sizeof(RecordHeader) + key.size() + value.size());
-//   ASSERT_EQ(recordInf.keyOffset, sizeof(RecordHeader));
-//   ASSERT_EQ(recordInf.valueOffset, sizeof(RecordHeader) +
-//   key.size());
-// }
 
 TEST_F(RecordTest, ReadAllRecordFromFileTest) {
   Key key = "anhhai";

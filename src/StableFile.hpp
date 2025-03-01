@@ -1,16 +1,13 @@
 #pragma once
-#include "File.hpp"
+#include "DatabaseFile.hpp"
+#include "Hint.hpp"
 #include "bitcask/Type.hpp"
 
 namespace bitcask {
-class StableFile {
+class StableFile : public DatabaseFile<Key, Hint> {
 public:
-  StableFile(file::FileHandler &file);
-  ~StableFile();
+  virtual ~StableFile();
 
   Value Read(const Key &key, Offset offset, size_t size);
-
-private:
-  file::FileHandler _file;
 };
 } // namespace bitcask

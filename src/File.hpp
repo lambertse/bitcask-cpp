@@ -11,5 +11,6 @@ bool OpenFile(FileHandler file, const std::string &filename,
 bool ReadFile(FileHandler file, void *buf, size_t size);
 std::string ReadFile(FileHandler file, Offset offset, size_t size);
 long WriteFile(FileHandler &file, const void *buf, size_t size);
+bool Exist(const std::string &file);
 
 } // namespace bitcask::file

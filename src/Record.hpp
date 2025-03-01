@@ -14,8 +14,10 @@ struct RecordInf {
   Value value;
 };
 
+using RecordFoundCallback = std::function<void(RecordInf)>;
+
 void ReadAllRecordFromFile(file::FileHandler file,
-                           std::function<void(RecordInf)> callback);
+                           const RecordFoundCallback &callback);
 
 RecordInf WriteRecord(file::FileHandler file, const Key &key,
                       const Value &value);
