@@ -29,6 +29,7 @@ public:
   }
   virtual ~DatabaseFile() {
     if (_file) {
+      _file->flush();
       _file->close();
       delete _file;
     }

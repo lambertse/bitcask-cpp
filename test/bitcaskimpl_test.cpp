@@ -27,6 +27,7 @@ TEST_F(BitCaskImplTest, InitFromFolder) {
   bitcaskPtr->Put("key1", "value1");
   bitcaskPtr->Put("key2", "value2");
   bitcaskPtr->Put("key3", "value3");
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   EXPECT_EQ(bitcaskPtr->Get("key1").value_or(""), "value1");
   EXPECT_EQ(bitcaskPtr->Get("key2").value_or(""), "value2");
   EXPECT_EQ(bitcaskPtr->Get("key3").value_or(""), "value3");

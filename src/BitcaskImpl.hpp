@@ -3,18 +3,24 @@
 #include "ActiveMap.hpp"
 #include "RecordMap.hpp"
 #include "StableFile.hpp"
+#include "bitcask/Setting.hpp"
 #include "bitcask/Type.hpp"
 
+#include <atomic>
+#include <cstdint>
+#include <future>
 #include <map>
 #include <optional>
 #include <shared_mutex>
 namespace bitcask {
+
+using Writes = std::vector<struct Write>;
 class BitcaskImpl {
 public:
   explicit BitcaskImpl(const std::string &dbDir);
   ~BitcaskImpl();
 
-  bool Put(const Key &key, const Value &value);
+  std::future<void> Put(const Key &key, const Value &value);
   std::optional<Value> Get(const Key &key);
   bool Delete(const Key &key);
 
@@ -23,13 +29,22 @@ private:
   bool RestoreStableMap(const std::string &dbDir);
   uint32_t GetActiveFileID(const std::string &dbDir);
 
+  bool CommitWrite(Writes &writes);
+  bool CommitWorker();
+
+  uint32_t GetActiveFD();
+
 private:
   std::shared_mutex _mtx;
-  uint32_t _activeFileID;
+  std::string _dbDir;
+  std::atomic_bool _running;
+  Setting _setting;
 
   ActiveMap _activeMap;
   RecordMap _recordMap;
 
+  std::thread _commitProcessor;
+  Writes _writes;
   std::map<uint32_t, std::shared_ptr<StableFile>> _stableFiles;
   std::shared_ptr<ActiveFile> _activeFile;
 };

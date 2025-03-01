@@ -14,7 +14,19 @@ public:
   static Handler Create(file::FileHandler file) {
     return std::make_shared<ActiveFile>(file);
   }
-  RecordInf Write(const Key &key, const Value &value);
+  static Handler Create(const std::string &path) {
+    file::FileHandler file = new std::fstream();
+    if (!file::OpenFile(file, path,
+                        std::ios::binary | std::ios::out | std::ios::in |
+                            std::ios::trunc)) {
+      BITCASK_LOGGER_ERROR("Cannot create active file: {}", path);
+      return nullptr;
+    }
+    return Create(file);
+  }
+
+  Offset Write(const Key &key, const Value &value);
+  file::FileHandler Rotate();
 };
 
 } // namespace bitcask
