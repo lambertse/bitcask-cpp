@@ -47,7 +47,7 @@ TEST_F(RecordTest, ReadAllRecordFromFileTest) {
 }
 
 int main(int argc, char **argv) {
-  logger::init(logger::LOG_LEVEL_FROM_INFO,
+  logger::init(logger::LOG_LEVEL_FROM_DEBUG,
                [](std::string msg) { std::cout << msg << std::endl; });
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

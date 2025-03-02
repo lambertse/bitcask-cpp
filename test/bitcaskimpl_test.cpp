@@ -1,4 +1,5 @@
 #include "BitcaskImpl.hpp"
+#include "log/Logger.hpp"
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <memory>

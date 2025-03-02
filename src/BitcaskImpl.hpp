@@ -26,14 +26,13 @@ public:
   bool Delete(const Key &key);
 
 private:
-  bool RestoreActiveMap(const std::string &activePath);
-  bool RestoreStableMap(const std::string &dbDir);
-  uint32_t GetActiveFileID(const std::string &dbDir);
+  bool RestoreActiveMap();
+  bool RestoreStableMap();
 
   bool CommitWrite(Writes &writes);
   bool CommitWorker();
 
-  uint32_t GetActiveFD();
+  uint32_t GetNextFD();
 
 private:
   std::shared_mutex _mtx;

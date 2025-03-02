@@ -1,9 +1,16 @@
 #include "StableFile.hpp"
+#include "log/Logger.hpp"
 #include <filesystem>
 
 namespace bitcask {
 using namespace file;
-StableFile::~StableFile() {}
+StableFile::~StableFile() {
+  if (_file) {
+    _file->flush();
+    _file->close();
+    delete _file;
+  }
+}
 
 file::FileHandler StableFile::Restore(const std::string &filename,
                                       const RecordFoundCallback &callback) {

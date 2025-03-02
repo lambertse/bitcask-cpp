@@ -1,10 +1,18 @@
 #include "ActiveFile.hpp"
 #include "File.hpp"
 #include "Record.hpp"
+#include "log/Logger.hpp"
+#include <filesystem>
 
 namespace bitcask {
 using namespace file;
-ActiveFile::~ActiveFile() {}
+ActiveFile::~ActiveFile() {
+  if (_file) {
+    _file->flush();
+    _file->close();
+    delete _file;
+  }
+}
 file::FileHandler ActiveFile::Restore(const std::string &filename,
                                       const RecordFoundCallback &callback) {
   if (!std::filesystem::exists(filename)) {
