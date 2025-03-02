@@ -25,6 +25,8 @@ inline constexpr LogLevel LOG_LEVEL_FROM_WARN =
     LOG_LEVEL_WARN | LOG_LEVEL_FROM_ERROR;
 inline constexpr LogLevel LOG_LEVEL_FROM_INFO =
     LOG_LEVEL_INFO | LOG_LEVEL_FROM_WARN;
+inline constexpr LogLevel LOG_LEVEL_FROM_DEBUG =
+    LOG_LEVEL_DEBUG | LOG_LEVEL_FROM_INFO;
 
 using LoggingFunctionType = std::function<void(const std::string &msg)>;
 

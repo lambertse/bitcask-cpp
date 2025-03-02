@@ -1,23 +1,29 @@
 #pragma once
+#include "Setting.hpp"
 #include "Type.hpp"
+#include <future>
+
 #include <memory>
 #include <optional>
 namespace bitcask {
 class Bitcask {
 public:
-  static Bitcask *Create(const std::string &dbDir);
+  static Bitcask *Create(const std::string &dbDir,
+                         const Setting &setting = Setting{});
   ~Bitcask();
 
-  bool Put(const Key &key, const Value &value);
+  void Put(const Key &key, const Value &value);
+  std::future<void> PutAsync(const Key &key, const Value &value);
+
   std::optional<Value> Get(const Key &key);
   bool Delete(const Key &key);
 
 private:
-  Bitcask(const std::string &dbDir);
+  Bitcask(const std::string &dbDir, const Setting &setting = Setting{});
   Bitcask(const Bitcask &);
   Bitcask &operator=(const Bitcask &);
 
-  std::shared_ptr<class BitcaskImpl> impl_;
+  std::shared_ptr<class BitcaskImpl> _impl;
 };
 
 } // namespace bitcask

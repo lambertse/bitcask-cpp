@@ -22,7 +22,7 @@ size_t fillHeader(RecordHeader &header, const Key &key, const Value &value);
 } // namespace internal
 } // namespace
 
-RecordInf WriteRecord(file::FileHandler file, const Key &key,
+RecordInf WriteRecord(file::FileHandler &file, const Key &key,
                       const Value &value) {
   RecordHeader header;
   size_t size = internal::fillHeader(header, key, value);
@@ -35,15 +35,19 @@ RecordInf WriteRecord(file::FileHandler file, const Key &key,
   recordInf.valueOffset = file->tellp();
   file::WriteFile(file, value.c_str(), value.size());
   recordInf.size = size;
+  BITCASK_LOGGER_INFO("Write record: key={}, value={}, offset after write: {}",
+                      key, value, file->tellp());
   return recordInf;
 }
 
-bool ReadRecord(file::FileHandler file, Key &key, Value &value,
+bool ReadRecord(file::FileHandler &file, Key &key, Value &value,
                 RecordInf &record) {
   RecordHeader header;
-  if (!file::ReadFile(file, &header, sizeof(header)))
+  if (!file::ReadFile(file, &header, sizeof(header))) {
+    BITCASK_LOGGER_ERROR("Failed to read record header");
     return false;
-  record.keyOffset = file->tellg();
+  }
+  record.keyOffset = file->tellp();
   key = file::ReadFile(file, record.keyOffset, header.keySize);
   record.valueOffset = record.keyOffset + header.keySize;
   value = file::ReadFile(file, record.valueOffset, header.valueSize);
@@ -56,7 +60,7 @@ bool ReadRecord(file::FileHandler file, Key &key, Value &value,
   return true;
 }
 
-void ReadAllRecordFromFile(file::FileHandler file,
+void ReadAllRecordFromFile(file::FileHandler &file,
                            const RecordFoundCallback &callback) {
   RecordInf info;
   uint32_t count = 0;
@@ -64,14 +68,24 @@ void ReadAllRecordFromFile(file::FileHandler file,
   Value value;
 
   file->seekg(0, std::ios::beg);
+  BITCASK_LOGGER_INFO("Starting to read all records from file, position: {}",
+                      file->tellg());
+
   while (ReadRecord(file, key, value, info)) {
     callback(key, value, info);
     count++;
+    BITCASK_LOGGER_INFO("Record {}: key={}, value={}, size={}", count, key,
+                        value, info.size);
   }
+
   if (!file->eof()) {
-    BITCASK_LOGGER_ERROR("Read file error");
+    BITCASK_LOGGER_ERROR("Read file error, file state: is good {}, is bad {}, "
+                         "is_open {}, position {}",
+                         file->good(), file->bad(), file->is_open(),
+                         file->tellg());
+  } else {
+    BITCASK_LOGGER_INFO("Finished reading all records, total count: {}", count);
   }
-  file->close();
 }
 
 namespace {

@@ -17,7 +17,8 @@ namespace bitcask {
 using Writes = std::vector<struct Write>;
 class BitcaskImpl {
 public:
-  explicit BitcaskImpl(const std::string &dbDir);
+  explicit BitcaskImpl(const std::string &dbDir,
+                       const Setting &setting = Setting{});
   ~BitcaskImpl();
 
   std::future<void> Put(const Key &key, const Value &value);

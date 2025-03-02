@@ -15,10 +15,10 @@ struct RecordInf {
 using RecordFoundCallback =
     std::function<void(const Key &, const Value &, RecordInf)>;
 
-void ReadAllRecordFromFile(file::FileHandler file,
+void ReadAllRecordFromFile(file::FileHandler &file,
                            const RecordFoundCallback &callback);
 
-RecordInf WriteRecord(file::FileHandler file, const Key &key,
+RecordInf WriteRecord(file::FileHandler &file, const Key &key,
                       const Value &value);
 
 } // namespace bitcask

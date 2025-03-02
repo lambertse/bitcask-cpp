@@ -7,3 +7,4 @@ endmacro()
 
 add_test_executable(record)
 add_test_executable(bitcaskimpl)
+add_test_executable(init_from_existed_db)

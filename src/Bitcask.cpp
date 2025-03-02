@@ -1,27 +1,25 @@
 #include "bitcask/Bitcask.hpp"
+#include "BitcaskImpl.hpp"
 
 namespace bitcask {
-Bitcask *Bitcask::Create(const std::string &db_path) {
-  return new Bitcask(db_path);
+Bitcask *Bitcask::Create(const std::string &db_path, const Setting &setting) {
+  return new Bitcask(db_path, setting);
 }
 
-bool Bitcask::Put(const Key &key, const Value &value) {
-  // TBD
-  return false;
+void Bitcask::Put(const Key &key, const Value &value) {
+  return _impl->Put(key, value).get();
 }
 
-std::optional<Value> Bitcask::Get(const Key &key) {
-  // TBD
-  return std::nullopt;
+std::future<void> Bitcask::PutAsync(const Key &key, const Value &value) {
+  return _impl->Put(key, value);
 }
 
-bool Bitcask::Delete(const Key &key) {
-  // TBD
-  return false;
-}
+std::optional<Value> Bitcask::Get(const Key &key) { return _impl->Get(key); }
 
-Bitcask::Bitcask(const std::string &db_path) {
-  // TBD
+bool Bitcask::Delete(const Key &key) { return _impl->Delete(key); }
+
+Bitcask::Bitcask(const std::string &db_path, const Setting &setting) {
+  _impl = std::make_shared<BitcaskImpl>(db_path, setting);
 }
 
 Bitcask::~Bitcask() {}

@@ -66,6 +66,9 @@ bool BitcaskImpl::RestoreStableMap(const std::string &dbDir) {
   for (const auto &entry : std::filesystem::directory_iterator(dbDir, ec)) {
     if (entry.is_regular_file()) {
       uint32_t fileID = std::stoul(entry.path().filename().string());
+      if (fileID == GetActiveFD()) {
+        continue;
+      }
       RecordFoundCallback callback = [&](const Key &key, const Value &value,
                                          RecordInf record) {
         Hint hint;
@@ -81,8 +84,8 @@ bool BitcaskImpl::RestoreStableMap(const std::string &dbDir) {
   return true;
 }
 
-BitcaskImpl::BitcaskImpl(const std::string &dbDir)
-    : _running(true), _dbDir(dbDir) {
+BitcaskImpl::BitcaskImpl(const std::string &dbDir, const Setting &setting)
+    : _running(true), _dbDir(dbDir), _setting(setting) {
 
   RestoreActiveMap(dbDir + std::to_string(GetActiveFD()) + ".db");
   RestoreStableMap(dbDir);
@@ -106,16 +109,18 @@ std::optional<Value> BitcaskImpl::Get(const Key &key) {
   std::shared_lock lock(_mtx);
   auto recordOpt = _recordMap.Get(key);
   if (!recordOpt.has_value()) {
+    BITCASK_LOGGER_INFO("Key not found");
     return std::nullopt;
   }
   auto record = recordOpt.value();
   if (record.fd == GetActiveFD()) {
+    BITCASK_LOGGER_INFO("Get from active file");
     return _activeMap.Get(key);
   }
   if (_stableFiles.find(record.fd) == _stableFiles.end()) {
     return std::nullopt;
   }
-
+  BITCASK_LOGGER_INFO("Get from stable file");
   return _stableFiles[record.fd]->Read(key, record.offset, record.size);
 }
 
@@ -158,9 +163,8 @@ bool BitcaskImpl::CommitWrite(Writes &writes) {
   }
   for (int i = 0; i < writes.size(); i++) {
     auto &[key, value, promise] = writes[i];
-    if (i < lastActiveWrite) {
+    if (i >= lastActiveWrite) {
       _activeMap.Put(key, value);
-      continue;
     }
     _recordMap.Put(key, records[i]);
     promise.set_value();
