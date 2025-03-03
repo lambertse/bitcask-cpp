@@ -1,5 +1,6 @@
 #include "StableFile.hpp"
-#include "log/Logger.hpp"
+#include "File.hpp"
+#include "bitcask/Logger.hpp"
 #include <filesystem>
 
 namespace bitcask {
@@ -35,10 +36,7 @@ StableFile::Handler StableFile::Create(file::FileHandler file) {
 
 Value StableFile::Read(const Key &key, Offset offset, size_t size) {
   _file->seekg(offset, std::ios::beg);
-  Value value;
-  if (file::ReadFile(_file, &value, size)) {
-    return value;
-  }
-  return "";
+  std::string value = file::ReadValueFromFile(_file, size);
+  return value;
 }
 } // namespace bitcask

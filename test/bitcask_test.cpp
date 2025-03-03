@@ -1,7 +1,7 @@
 #include "bitcask/Bitcask.hpp"
+#include <bitcask/Logger.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
-#include <log/Logger.hpp>
 
 using namespace bitcask;
 

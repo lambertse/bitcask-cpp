@@ -1,6 +1,6 @@
 #include "File.hpp"
+#include "bitcask/Logger.hpp"
 #include "bitcask/Type.hpp"
-#include "log/Logger.hpp"
 #include <filesystem>
 
 namespace bitcask::file {
@@ -17,6 +17,14 @@ bool ReadFile(FileHandler &file, void *buf, size_t size) {
     return false;
   }
   return true;
+}
+
+std::string ReadValueFromFile(FileHandler &file, size_t size) {
+  std::string buf(size, '\0');
+  if (!ReadFile(file, &buf[0], size)) {
+    return "";
+  }
+  return buf;
 }
 
 std::string ReadFile(FileHandler &file, size_t size) {

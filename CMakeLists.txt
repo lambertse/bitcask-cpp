@@ -1,13 +1,23 @@
-
+cmake_minimum_required(VERSION 3.0)
 project(bitcask_cpp)
+
+# Set C++ standard first
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-cmake_minimum_required(VERSION 3.0)
+# Force Debug build type
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE Debug)
+set(BITCASK_SHARED_LIBRARY ON)
+set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 
-set(CRC32C_BUILD_TESTS OFF)
+# Define compile flags for Debug and Release modes
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
+
+# Disable unused test builds for dependencies
 set(CRC32C_BUILD_TESTS OFF)
 set(CRC32C_USE_GLOG OFF)
 set(CRC32C_INSTALL OFF)
@@ -18,15 +28,15 @@ FetchContent_Declare(
   crc32c
   GIT_REPOSITORY https://github.com/google/crc32c.git
   GIT_TAG        main
-  )
+)
 FetchContent_MakeAvailable(crc32c)
-#
+
 FetchContent_Declare(
   googletest
-    URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
-  )
+  URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+)
 FetchContent_MakeAvailable(googletest)
-#
+
 FetchContent_Declare(
   libcuckoo 
   GIT_REPOSITORY https://github.com/efficient/libcuckoo.git
@@ -43,8 +53,13 @@ file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.hpp")
 file(GLOB SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 # Add all source files to the library
-add_library(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+if(BITCASK_SHARED_LIBRARY)
+  add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES})
+else()
+  add_library(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE crc32c)
 
 add_subdirectory(test)

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "Record.hpp"
-#include "log/Logger.hpp"
+#include "bitcask/Logger.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <iostream>

@@ -1,4 +1,5 @@
 #pragma once
+#include "LibExport.hpp"
 #include "Setting.hpp"
 #include "Type.hpp"
 #include <future>
@@ -8,15 +9,15 @@
 namespace bitcask {
 class Bitcask {
 public:
-  static Bitcask *Create(const std::string &dbDir,
-                         const Setting &setting = Setting{});
+  static BITCASK_EXPORT Bitcask *Create(const std::string &dbDir,
+                                        const Setting &setting = Setting{});
   ~Bitcask();
 
-  void Put(const Key &key, const Value &value);
-  std::future<void> PutAsync(const Key &key, const Value &value);
+  BITCASK_EXPORT void Put(const Key &key, const Value &value);
+  BITCASK_EXPORT std::future<void> PutAsync(const Key &key, const Value &value);
 
-  std::optional<Value> Get(const Key &key);
-  bool Delete(const Key &key);
+  BITCASK_EXPORT std::optional<Value> Get(const Key &key);
+  BITCASK_EXPORT bool Delete(const Key &key);
 
 private:
   Bitcask(const std::string &dbDir, const Setting &setting = Setting{});

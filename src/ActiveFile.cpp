@@ -1,7 +1,7 @@
 #include "ActiveFile.hpp"
 #include "File.hpp"
 #include "Record.hpp"
-#include "log/Logger.hpp"
+#include "bitcask/Logger.hpp"
 #include <filesystem>
 
 namespace bitcask {
@@ -36,7 +36,8 @@ file::FileHandler ActiveFile::Restore(const std::string &filename,
   // Reopen in append mode for future writes
   file::FileHandler result = new std::fstream();
   if (!file::OpenFile(result, filename,
-                      std::ios::binary | std::ios::out | std::ios::app)) {
+                      std::ios::binary | std::ios::in | std::ios::out |
+                          std::ios::app)) {
     BITCASK_LOGGER_ERROR("Failed to open file for appending: {}", filename);
     delete result; // Clean up on failure
     return nullptr;
@@ -52,7 +53,8 @@ ActiveFile::Handler ActiveFile::Create(file::FileHandler file) {
 ActiveFile::Handler ActiveFile::Create(const std::string &path) {
   file::FileHandler file = new std::fstream();
   if (!file::OpenFile(file, path,
-                      std::ios::binary | std::ios::out | std::ios::trunc)) {
+                      std::ios::binary | std::ios::in | std::ios::out |
+                          std::ios::trunc)) {
     BITCASK_LOGGER_ERROR("Cannot create active file: {}", path);
     return nullptr;
   }

@@ -1,8 +1,8 @@
 #include "Record.hpp"
 #include "CRC32.hpp"
 #include "File.hpp"
+#include "bitcask/Logger.hpp"
 #include "bitcask/Type.hpp"
-#include "log/Logger.hpp"
 namespace bitcask {
 
 // Record structure:
@@ -31,12 +31,12 @@ RecordInf WriteRecord(file::FileHandler &file, const Key &key,
 
   RecordInf recordInf;
   recordInf.keyOffset = file->tellp();
-  file::WriteFile(file, key.c_str(), key.size());
+  file::WriteFile(file, key.c_str(), sizeof(key.c_str()));
   recordInf.valueOffset = file->tellp();
-  file::WriteFile(file, value.c_str(), value.size());
+  file::WriteFile(file, value.c_str(), sizeof(value.c_str()));
   recordInf.size = size;
-  BITCASK_LOGGER_INFO("Write record: key={}, value={}, offset after write: {}",
-                      key, value, file->tellp());
+  BITCASK_LOGGER_DEBUG("Write record: key={}, value={}, offset after write: {}",
+                       key, value, file->tellp());
   return recordInf;
 }
 

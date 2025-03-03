@@ -1,5 +1,5 @@
 #include "ActiveMap.hpp"
-#include "log/Logger.hpp"
+#include "bitcask/Logger.hpp"
 
 namespace bitcask {
 ActiveMap::ActiveMap() = default;

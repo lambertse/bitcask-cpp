@@ -32,7 +32,7 @@ private:
   bool CommitWrite(Writes &writes);
   bool CommitWorker();
 
-  uint32_t GetNextFD();
+  uint32_t getActiveFD() const;
 
 private:
   std::shared_mutex _mtx;

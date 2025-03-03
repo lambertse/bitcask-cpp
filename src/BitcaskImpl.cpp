@@ -1,5 +1,5 @@
 #include "BitcaskImpl.hpp"
-#include "log/Logger.hpp"
+#include "bitcask/Logger.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -9,17 +9,35 @@
 
 namespace bitcask {
 using namespace file;
-constexpr auto kActiveFileName = "active.db";
 
 namespace {
-namespace internal {
+namespace Internal {
 std::string ensureEndingSlash(const std::string &path) {
   if (path.empty() || path.back() == '/') {
     return path;
   }
   return path + "/";
 }
-} // namespace internal
+std::string getActivePathInDir(const std::string &dbDir) {
+  std::error_code ec;
+  int maxFD = 0;
+  for (const auto &entry : std::filesystem::directory_iterator(dbDir, ec)) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    try {
+      int fd = std::stoul(entry.path().filename().string());
+      if (fd > maxFD) {
+        maxFD = fd;
+      }
+    } catch (...) {
+      continue;
+    }
+  }
+  return dbDir + std::to_string(maxFD) + ".db";
+
+} // namespace Internal
+} // namespace Internal
 } // namespace
 
 struct Write {
@@ -36,11 +54,11 @@ using Writes = std::vector<Write>;
 
 bool BitcaskImpl::RestoreActiveMap() {
   std::error_code ec;
-  auto activePath = _dbDir + kActiveFileName;
+  auto activePath = Internal::getActivePathInDir(_dbDir);
   if (std::filesystem::exists(activePath, ec)) {
     RecordFoundCallback callback = [this](const Key &key, const Value &value,
                                           RecordInf record) {
-      Hint hint{GetNextFD(), record.valueOffset, sizeof(value)};
+      Hint hint{getActiveFD(), record.valueOffset, sizeof(value)};
       _recordMap.Put(key, hint);
       _activeMap.Put(key, value);
     };
@@ -57,10 +75,14 @@ bool BitcaskImpl::RestoreActiveMap() {
 
 bool BitcaskImpl::RestoreStableMap() {
   std::error_code ec;
+  std::string activeFileName =
+      std::filesystem::path(Internal::getActivePathInDir(_dbDir))
+          .filename()
+          .string();
 
   for (const auto &entry : std::filesystem::directory_iterator(_dbDir, ec)) {
     if (!entry.is_regular_file() ||
-        entry.path().filename().string() == kActiveFileName) {
+        entry.path().filename().string() == activeFileName) {
       continue;
     }
 
@@ -78,7 +100,8 @@ bool BitcaskImpl::RestoreStableMap() {
 
 BitcaskImpl::BitcaskImpl(const std::string &dbDir, const Setting &setting)
     : _running(true), _setting(setting) {
-  _dbDir = internal::ensureEndingSlash(dbDir);
+  BITCASK_LOGGER_INFO("Max file size: {}", setting.maxFileSize);
+  _dbDir = Internal::ensureEndingSlash(dbDir);
 
   RestoreActiveMap();
   RestoreStableMap();
@@ -106,7 +129,7 @@ std::optional<Value> BitcaskImpl::Get(const Key &key) {
     return std::nullopt;
   }
   auto record = recordOpt.value();
-  if (record.fd == GetNextFD()) {
+  if (record.fd == getActiveFD()) {
     BITCASK_LOGGER_DEBUG("Get from active file");
     return _activeMap.Get(key);
   }
@@ -122,30 +145,35 @@ bool BitcaskImpl::Delete(const Key &key) {
   return false;
 }
 
-uint32_t BitcaskImpl::GetNextFD() { return _stableFiles.size(); }
+uint32_t BitcaskImpl::getActiveFD() const { return _stableFiles.size(); }
 
 bool BitcaskImpl::CommitWrite(Writes &writes) {
-  auto activeFile = _activeFile;
   std::map<uint32_t, std::shared_ptr<StableFile>> newStableFiles;
   std::vector<Hint> records;
   int idx = 0, lastActiveWrite = 0;
 
   for (const auto &[key, value, promise] : writes) {
-    auto valueOffset = activeFile->Write(key, value);
-    records.push_back(Hint{GetNextFD(), valueOffset, sizeof(value)});
+    if (value == "37449") {
+      BITCASK_LOGGER_INFO("key: {}, value: {}", key, value);
+    }
+    auto valueOffset = _activeFile->Write(key, value);
+    records.push_back(Hint{getActiveFD(), valueOffset, sizeof(value)});
     idx++;
     if (valueOffset < _setting.maxFileSize) {
       continue;
     }
     BITCASK_LOGGER_INFO("Rotate active file");
     // Create new stable file with current active file
-    auto handler = activeFile->Rotate();
-    auto fd = GetNextFD() + newStableFiles.size();
+    _activeFile->Rotate();
+    auto fd = getActiveFD() + newStableFiles.size();
+    FileHandler handler = new std::fstream();
+    handler->open(_dbDir + std::to_string(fd) + ".db",
+                  std::ios::binary | std::ios::in | std::ios::app);
     newStableFiles[fd] = StableFile::Create(handler);
     lastActiveWrite = idx;
 
-    std::string newActiveFileName = _dbDir + std::to_string(fd) + ".db";
-    activeFile = ActiveFile::Create(newActiveFileName);
+    std::string newActiveFileName = _dbDir + std::to_string(fd + 1) + ".db";
+    _activeFile = ActiveFile::Create(newActiveFileName);
   }
   {
     std::shared_lock lock(_mtx);
